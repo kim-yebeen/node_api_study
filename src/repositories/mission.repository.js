@@ -18,3 +18,16 @@ export async function addMission(storeId, dto) {
       conn.release();
     }
   }
+
+  export async function getMissionById(missionId) {
+    const conn = await pool.getConnection();
+    try {
+      const [rows] = await conn.query(
+        `SELECT * FROM mission WHERE id = ?;`,
+        [missionId]
+      );
+      return rows[0] || null;
+    } finally {
+      conn.release();
+    }
+  }

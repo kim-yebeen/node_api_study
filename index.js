@@ -5,6 +5,7 @@ import {handleUserSignUp} from "./src/controllers/user.controller.js";
 import {handleCreateStore} from "./src/controllers/store.controller.js"
 import { handleCreateReview } from "./src/controllers/review.controller.js";
 import { handleCreateMission } from "./src/controllers/mission.controller.js";
+import { handleChallengeMission } from "./src/controllers/mission.controller.js";
 
 dotenv.config();
 
@@ -26,7 +27,7 @@ app.post("/users/signup", handleUserSignUp);
 app.post("/stores", handleCreateStore);
 app.post("/stores/:storeId/reviews", handleCreateReview);
 app.post("/stores/:storeId/missions", handleCreateMission);
-
+app.post("/stores/:storeId/missions/:missionId/challenge", handleChallengeMission);
 app.listen(port, () =>{
     console.log(`${port}번 포트에서 서버 실행 중`);
 });
