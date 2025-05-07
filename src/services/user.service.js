@@ -1,32 +1,28 @@
-import { responseFromUser } from "../dtos/user.dto.js";
-import {
-  addUser,
-  getUser,
-  getUserPreferencesByUserId,
-  setPreference,
-} from "../repositories/user.repository.js";
+// src/services/user.service.js
+import { StatusCodes } from "http-status-codes";
+import { addUser, getUser } from "../repositories/user.repository.js";
+import { bodyToUser, responseFromUser } from "../dtos/user.dto.js";
 
-export const userSignUp = async (data) => {
-  const joinUserId = await addUser({
-    email: data.email,
-    name: data.name,
-    gender: data.gender,
-    birth: data.birth,
-    address: data.address,
-    detailAddress: data.detailAddress,
-    phoneNumber: data.phoneNumber,
-  });
+export async function userSignUp(rawBody) {
+  // 1) DTO 변환
+  const userData = bodyToUser(rawBody);
 
-  if (joinUserId === null) {
-    throw new Error("이미 존재하는 이메일입니다.");
+  // 2) 가입 시도
+  const userId = await addUser(userData);
+  if (userId === null) {
+    const err = new Error("이미 존재하는 이메일입니다.");
+    err.status = StatusCodes.CONFLICT;
+    throw err;
   }
 
-  for (const preference of data.preferences) {
-    await setPreference(joinUserId, preference);
+  // 3) 가입된 사용자 조회
+  const user = await getUser(userId);
+  if (!user) {
+    const err = new Error("가입된 사용자를 찾을 수 없습니다.");
+    err.status = StatusCodes.INTERNAL_SERVER_ERROR;
+    throw err;
   }
 
-  const user = await getUser(joinUserId);
-  const preferences = await getUserPreferencesByUserId(joinUserId);
-
-  return responseFromUser({ user, preferences });
-};
+  // 4) 응답 DTO
+  return responseFromUser(user);
+}

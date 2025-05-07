@@ -1,18 +1,21 @@
-import { addStore } from "../repositories/store.repository.js";
-import { getRegionById } from "../repositories/region.repository.js"; // 아래에 구현 예시
-import { StatusCodes } from "http-status-codes";
+// src/services/store.service.js
+import { StatusCodes }      from "http-status-codes";
+import { addStore, getRegionById } from "../repositories/store.repository.js";
+import { bodyToStore }      from "../dtos/store.dto.js";
 
+export async function createStore(rawBody) {
+  // 1) DTO 변환
+  const dto = bodyToStore(rawBody);
 
-export async function createStore(storeDto) {
-    // 1) 지역 검증
-    const region = await getRegionById(storeDto.regionId);
-    if (!region) {
-      const err = new Error("지역을 찾을 수 없습니다.");
-      err.status = StatusCodes.NOT_FOUND;
-      throw err;
-    }
-  
-    // 2) 가게 삽입
-    const storeId = await addStore(storeDto);
-    return { storeId };
+  // 2) region 검증
+  const region = await getRegionById(dto.regionId);
+  if (!region) {
+    const err = new Error("지역을 찾을 수 없습니다.");
+    err.status = StatusCodes.NOT_FOUND;
+    throw err;
   }
+
+  // 3) store 생성
+  const storeId = await addStore(dto);
+  return { storeId };
+}

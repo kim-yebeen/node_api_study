@@ -1,33 +1,25 @@
-import { pool } from "../db.config.js";
+// src/repositories/mission.repository.js
+import { prisma } from "../db.config.js";
 
 export async function addMission(storeId, dto) {
-    const conn = await pool.getConnection();
-    try {
-      const [result] = await conn.query(
-        `INSERT INTO mission (store_id, reward, deadline, mission_spec)
-         VALUES (?, ?, ?, ?);`,
-        [
-          storeId,
-          dto.reward,
-          dto.deadline ? dto.deadline : null,
-          dto.missionSpec
-        ]
-      );
-      return result.insertId;
-    } finally {
-      conn.release();
+  const created = await prisma.mission.create({
+    data: {
+      store:       { connect: { id: storeId } },
+      reward:      dto.reward,
+      deadline:    dto.deadline,
+      missionSpec: dto.missionSpec
     }
-  }
+  });
+  return created.id;
+}
 
-  export async function getMissionById(missionId) {
-    const conn = await pool.getConnection();
-    try {
-      const [rows] = await conn.query(
-        `SELECT * FROM mission WHERE id = ?;`,
-        [missionId]
-      );
-      return rows[0] || null;
-    } finally {
-      conn.release();
-    }
-  }
+export async function getMissionById(id) {
+  return prisma.mission.findUnique({ where: { id } });
+}
+
+export async function getMissionsByStore(storeId) {
+  return prisma.mission.findMany({
+    where: { storeId },
+    orderBy: { id: "asc" }
+  });
+}

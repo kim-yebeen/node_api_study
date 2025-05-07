@@ -1,0 +1,169 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int                   @id @default(autoincrement()) 
+  email         String                @unique                       @db.VarChar(255)
+  name          String                @db.VarChar(50)
+  gender        String                @db.VarChar(10)
+  birth         DateTime?             @db.Date
+  address       String?               @db.VarChar(255)
+  detailAddress String?               @map("detail_address") @db.VarChar(255)
+  phoneNumber   String?               @map("phone_number")   @db.VarChar(20)
+  createdAt     DateTime              @map("created_at")     @db.DateTime(6) @default(now())
+  updatedAt     DateTime              @map("updated_at")     @db.DateTime(6) @updatedAt
+
+  agrees        UsersAgree[]          @relation("UserAgrees")
+  favorites     UserFavorCategory[]   @relation("UserFavorites")
+  missions      UsersMission[]        @relation("UserMissions")
+  reviews       Review[]              @relation("UserReviews")
+
+  @@map("users")
+}
+
+model Terms {
+  id         Int         @id @default(autoincrement()) 
+  title      String      @db.VarChar(20)
+  body       String?     @db.Text
+  optional   Boolean     @default(false)
+  createdAt  DateTime    @map("created_at") @db.DateTime(6) @default(now())
+  updatedAt  DateTime    @map("updated_at") @db.DateTime(6) @updatedAt
+
+  agrees     UsersAgree[]  @relation("TermsAgrees")
+
+  @@map("terms")
+}
+
+model UsersAgree {
+  id         Int      @id @default(autoincrement()) 
+  user       User     @relation("UserAgrees", fields: [userId], references: [id])
+  userId     Int      @map("user_id")              
+  terms      Terms    @relation("TermsAgrees", fields: [termsId], references: [id])
+  termsId    Int      @map("terms_id")             
+  createdAt  DateTime @map("created_at")           @db.DateTime(6) @default(now())
+  updatedAt  DateTime @map("updated_at")           @db.DateTime(6) @updatedAt
+
+  @@map("users_agree")
+  @@index([userId], map: "idx_users_agree_user")
+  @@index([termsId], map: "idx_users_agree_terms")
+}
+
+model FoodCategory {
+  id         Int                   @id @default(autoincrement()) 
+  name       String                @db.VarChar(15)
+  createdAt  DateTime              @map("created_at") @db.DateTime(6) @default(now())
+  updatedAt  DateTime              @map("updated_at") @db.DateTime(6) @updatedAt
+
+  favorites  UserFavorCategory[]   @relation("CategoryFavorites")
+
+  @@map("food_category")
+}
+
+model UserFavorCategory {
+  id             Int          @id @default(autoincrement()) 
+  user           User         @relation("UserFavorites", fields: [userId], references: [id])
+  userId         Int          @map("user_id")          
+  foodCategory   FoodCategory @relation("CategoryFavorites", fields: [foodCategoryId], references: [id])
+  foodCategoryId Int          @map("food_category_id")
+  createdAt      DateTime     @map("created_at")       @db.DateTime(6) @default(now())
+  updatedAt      DateTime     @map("updated_at")       @db.DateTime(6) @updatedAt
+
+  @@map("user_favor_category")
+  @@index([userId], map: "idx_ufc_user")
+  @@index([foodCategoryId], map: "idx_ufc_category")
+}
+
+model Region {
+  id         Int      @id @default(autoincrement())
+  name       String   @db.VarChar(20)
+  createdAt  DateTime @map("created_at") @db.DateTime(6) @default(now())
+  updatedAt  DateTime @map("updated_at") @db.DateTime(6) @updatedAt
+
+  stores     Store[]  @relation("RegionStores")
+
+  @@map("region")
+}
+
+model Store {
+  id         Int          @id @default(autoincrement()) 
+  region     Region       @relation("RegionStores", fields: [regionId], references: [id])
+  regionId   Int          @map("region_id")     
+  name       String       @db.VarChar(50)
+  address    String?      @db.VarChar(50)
+  score      Float?       @db.Float
+  createdAt  DateTime     @map("created_at") @db.DateTime(6) @default(now())
+  updatedAt  DateTime     @map("updated_at") @db.DateTime(6) @updatedAt
+
+  missions   Mission[]    @relation("StoreMissions")
+  reviews    Review[]     @relation("StoreReviews")
+
+  @@map("store")
+  @@index([regionId], map: "idx_store_region")
+}
+
+model Mission {
+  id           Int         @id @default(autoincrement())
+  store        Store       @relation("StoreMissions", fields: [storeId], references: [id])
+  storeId      Int         @map("store_id")        
+  reward       Int?        @db.Int
+  deadline     DateTime?   @db.DateTime(6)
+  missionSpec  String?     @map("mission_spec")      @db.Text
+  createdAt    DateTime    @map("created_at")        @db.DateTime(6) @default(now())
+  updatedAt    DateTime    @map("updated_at")        @db.DateTime(6) @updatedAt
+
+  userMissions UsersMission[] @relation("MissionUsers")
+
+  @@map("mission")
+  @@index([storeId], map: "idx_mission_store")
+}
+
+model UsersMission {
+  id         Int       @id @default(autoincrement()) 
+  user       User      @relation("UserMissions", fields: [userId], references: [id])
+  userId     Int       @map("user_id")          
+  mission    Mission   @relation("MissionUsers", fields: [missionId], references: [id])
+  missionId  Int       @map("mission_id")       
+  status     String?   @db.VarChar(15)
+  createdAt  DateTime  @map("created_at") @db.DateTime(6) @default(now())
+  updatedAt  DateTime  @map("updated_at") @db.DateTime(6) @updatedAt
+
+  @@map("users_mission")
+  @@index([userId], map: "idx_um_user")
+  @@index([missionId], map: "idx_um_mission")
+}
+
+model Review {
+  id         Int            @id @default(autoincrement()) 
+  user       User           @relation("UserReviews", fields: [userId], references: [id])
+  userId     Int            @map("user_id")        
+  store      Store          @relation("StoreReviews", fields: [storeId], references: [id])
+  storeId    Int            @map("store_id")        
+  body       String?        @db.Text
+  score      Float?         @db.Float
+  createdAt  DateTime       @map("created_at") @db.DateTime(6) @default(now())
+  updatedAt  DateTime       @map("updated_at") @db.DateTime(6) @updatedAt
+
+  images     ReviewImage[]
+
+  @@map("review")
+  @@index([userId], map: "idx_review_user")
+  @@index([storeId], map: "idx_review_store")
+}
+
+model ReviewImage {
+  id         Int      @id @default(autoincrement()) 
+  review     Review   @relation(fields: [reviewId], references: [id])
+  reviewId   Int      @map("review_id")          
+  imageUrl   String?  @map("image_url")           @db.Text
+  createdAt  DateTime @map("created_at") @db.DateTime(6) @default(now())
+  updatedAt  DateTime @map("updated_at") @db.DateTime(6) @updatedAt
+
+  @@map("review_image")
+  @@index([reviewId], map: "idx_ri_review")
+}

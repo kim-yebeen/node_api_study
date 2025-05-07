@@ -1,40 +1,41 @@
-import { StatusCodes }  from "http-status-codes";
-import { bodyToMission } from "../dtos/mission.dto.js";
-import { createMission } from "../services/mission.service.js";
-import { challengeMission } from "../services/mission.service.js";
+// src/controllers/mission.controller.js
+import { StatusCodes }       from "http-status-codes";
+import {
+  createMission,
+  listStoreMissions
+} from "../services/mission.service.js";
+import { challengeUserMission } from "../services/userMission.service.js";
 
 export async function handleCreateMission(req, res) {
-    try {
-      const storeId    = Number(req.params.storeId);
-      const missionDto = bodyToMission(req.body);
-  
-      const result = await createMission(storeId, missionDto);
-      return res
-        .status(StatusCodes.CREATED)
-        .json({ result });
-    } catch (err) {
-      const status = err.status || StatusCodes.INTERNAL_SERVER_ERROR;
-      return res
-        .status(status)
-        .json({ error: err.message });
-    }
+  try {
+    const storeId = Number(req.params.storeId);
+    const result  = await createMission(storeId, req.body);
+    res.status(StatusCodes.CREATED).json(result);
+  } catch (err) {
+    const code = err.status || StatusCodes.INTERNAL_SERVER_ERROR;
+    res.status(code).json({ error: err.message });
   }
+}
 
-
-  export async function handleChallengeMission(req, res) {
-    try {
-      const userId    = 1;  // 테스트용 하드코딩
-      const storeId   = Number(req.params.storeId);
-      const missionId = Number(req.params.missionId);
-  
-      const result = await challengeMission(userId, storeId, missionId);
-      return res
-        .status(StatusCodes.CREATED)
-        .json({ result });
-    } catch (err) {
-      const status = err.status || StatusCodes.INTERNAL_SERVER_ERROR;
-      return res
-        .status(status)
-        .json({ error: err.message });
-    }
+export async function handleListStoreMissions(req, res) {
+  try {
+    const storeId = Number(req.params.storeId);
+    const data    = await listStoreMissions(storeId);
+    res.status(StatusCodes.OK).json(data);
+  } catch (err) {
+    const code = err.status || StatusCodes.INTERNAL_SERVER_ERROR;
+    res.status(code).json({ error: err.message });
   }
+}
+
+export async function handleChallengeMission(req, res) {
+  try {
+    const userId    = Number(req.params.userId);
+    const missionId = Number(req.params.missionId);
+    const data      = await challengeUserMission(userId, missionId);
+    res.status(StatusCodes.CREATED).json(data);
+  } catch (err) {
+    const code = err.status || StatusCodes.INTERNAL_SERVER_ERROR;
+    res.status(code).json({ error: err.message });
+  }
+}
