@@ -2,12 +2,14 @@
 import { StatusCodes }      from "http-status-codes";
 import { createStore }      from "../services/store.service.js";
 
-export async function handleCreateStore(req, res) {
+export async function handleCreateStore(req, res, next) {
   try {
     const result = await createStore(req.body);
-    res.status(StatusCodes.CREATED).json(result);
-  } catch (err) {
-    const code = err.status || StatusCodes.INTERNAL_SERVER_ERROR;
-    res.status(code).json({ error: err.message });
+        //res.status(StatusCodes.CREATED).json(result);
+        res.status(StatusCodes.CREATED).success(result);
+      } catch (err) {
+    //const code = err.status || StatusCodes.INTERNAL_SERVER_ERROR;
+    //res.status(code).json({ error: err.message });
+    return next(err);
   }
 }

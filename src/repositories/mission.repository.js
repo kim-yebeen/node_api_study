@@ -13,8 +13,10 @@ export async function addMission(storeId, dto) {
   return created.id;
 }
 
-export async function getMissionById(id) {
-  return prisma.mission.findUnique({ where: { id } });
+export async function getMissionById(missionId) {
+  return prisma.mission.findUnique({
+    where: { id: missionId },
+  });
 }
 
 export async function getMissionsByStore(storeId) {

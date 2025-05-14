@@ -6,14 +6,16 @@ import {
   getReviewsByStoreId,
   getStoreById,
 } from "../repositories/review.repository.js";
+import { StoreNotFoundError } from "../errors.js";
 
 export async function createReview(userId, storeId, dto) {
   // 1) 가게 존재 검증
   const store = await getStoreById(storeId);
   if (!store) {
-    const err = new Error("가게를 찾을 수 없습니다.");
-    err.status = StatusCodes.NOT_FOUND;
-    throw err;
+    //const err = new Error("가게를 찾을 수 없습니다.");
+    //err.status = StatusCodes.NOT_FOUND;
+    //throw err;
+    throw new StoreNotFoundError("가게를 찾을 수 없습니다.");
   }
 
   // 2) 리뷰 저장 & 이미지 저장
