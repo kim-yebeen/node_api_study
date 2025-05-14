@@ -67,3 +67,7 @@ export async function getReviewsByStoreId(storeId) {
 export async function getStoreById(storeId) {
   return prisma.store.findUnique({ where: { id: storeId } });
 }
+
+export async function getUserById(userId) {
+  return prisma.user.findUnique({ where: { id: userId } });
+}

@@ -5,8 +5,10 @@ import {
   getReviewsByUserId,
   getReviewsByStoreId,
   getStoreById,
+  getUserById
 } from "../repositories/review.repository.js";
-import { StoreNotFoundError } from "../errors.js";
+
+import { UserNotFoundError, StoreNotFoundError } from "../errors.js";
 
 export async function createReview(userId, storeId, dto) {
   // 1) 가게 존재 검증
@@ -25,9 +27,14 @@ export async function createReview(userId, storeId, dto) {
 }
 
 export async function listMyReviews(userId) {
+  const user = await getUserById(userId);
+  if (!user) {  
+    throw new UserNotFoundError(undefined, { userId });
+   }
   return getReviewsByUserId(userId);
 }
 
 export async function listStoreReviews(storeId) {
   return getReviewsByStoreId(storeId);
 }
+
