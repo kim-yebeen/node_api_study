@@ -1,6 +1,8 @@
 import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
+import swaggerAutogen from "swagger-autogen";
+import swaggerUiExpress from "swagger-ui-express";
 
 import { handleUserSignUp }           from "./src/controllers/user.controller.js";
 import { handleListMyReviews }        from "./src/controllers/review.controller.js";
@@ -79,6 +81,41 @@ app.use((err, req, res, next) => {
     data: err.data || null,
   });
 });
+
+
+//swagger
+app.use(
+  "/docs",
+  swaggerUiExpress.serve,
+  swaggerUiExpress.setup({}, {
+    swaggerOptions: {
+      url: "/openapi.json",
+    },
+  })
+);
+
+app.get("/openapi.json", async (req, res, next) => {
+  // #swagger.ignore = true
+  const options = {
+    openapi: "3.0.0",
+    disableLogs: true,
+    writeOutputFile: false,
+  };
+  const outputFile = "/dev/null"; // 파일 출력은 사용하지 않습니다.
+  const routes = ["./index.js"];
+  const doc = {
+    info: {
+      title: "UMC 8th",
+      description: "UMC 8th Node.js 테스트 프로젝트입니다.",
+    },
+    host: "localhost:3000",
+  };
+
+  const result = await swaggerAutogen(options)(outputFile, routes, doc);
+  res.json(result ? result.data : null);
+});
+
+
 
 app.listen(port, () => {
   console.log(`${port}번 포트에서 서버 실행 중`);
