@@ -71,7 +71,7 @@ export async function handleListUserMissions(req, res, next) {
      }
   */
   try {
-    const userId = Number(req.params.userId);
+    const userId = req.user.id;
     const data   = await listUserMissions(userId);
     //res.status(StatusCodes.OK).json(data);
     res.status(StatusCodes.OK).success(data);
@@ -142,7 +142,7 @@ export async function handleCompleteMission(req, res, next) {
      }
   */
   try {
-    const userId    = Number(req.params.userId);
+    const userId    = req.user.id;
     const missionId = Number(req.params.missionId);
     const data      = await completeUserMission(userId, missionId);
     //res.status(StatusCodes.OK).json(data);

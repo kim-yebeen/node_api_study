@@ -88,7 +88,7 @@ export async function handleCreateReview(req, res, next) {
      }
   */
   try {
-    const userId  = 1; // TODO: 인증 구현 전 임시 하드코딩
+    const userId  = req.user.id; 
     const storeId = Number(req.params.storeId);
     const result  = await createReview(userId, storeId, req.body);
     //res.status(StatusCodes.CREATED).json(result);
@@ -177,7 +177,7 @@ export async function handleListMyReviews(req, res, next) {
      }
   */
   try {
-    const userId = Number(req.params.userId);
+    const userId = req.user.id;
     const data   = await listMyReviews(userId);
     //res.status(StatusCodes.OK).json(data);
     res.status(StatusCodes.OK).success(data);

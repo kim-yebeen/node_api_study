@@ -207,7 +207,7 @@ export async function handleChallengeMission(req, res, next) {
      }
   */
   try {
-    const userId    = Number(req.params.userId);
+    const userId    = req.user.id;
     const missionId = Number(req.params.missionId);
     const data      = await challengeUserMission(userId, missionId);
     //res.status(StatusCodes.CREATED).json(data);

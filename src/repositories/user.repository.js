@@ -57,3 +57,25 @@ export const getUserPreferencesByUserId = async (userId) => {
 
   return preferences;
 };
+
+// ID로 사용자 조회 (기본 정보만)
+export async function getUserById(userId) {
+  return await prisma.user.findUnique({
+    where: { id: userId }
+  });
+}
+
+// 사용자 정보 업데이트 (Prisma 버전)
+export async function updateUser(userId, updateData) {
+  return await prisma.user.update({
+    where: { id: userId },
+    data: {
+      name: updateData.name,
+      gender: updateData.gender,
+      birth: updateData.birth,
+      address: updateData.address,
+      detailAddress: updateData.detailAddress,
+      phoneNumber: updateData.phoneNumber,
+    }
+  });
+}

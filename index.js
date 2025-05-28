@@ -3,8 +3,14 @@ import express from "express";
 import cors from "cors";
 import swaggerAutogen from "swagger-autogen";
 import swaggerUiExpress from "swagger-ui-express";
+import { PrismaSessionStore } from "@quixo3/prisma-session-store";
+import session from "express-session";
+import passport from "passport";
+import { googleStrategy, naverStrategy } from "./src/auth.config.js";
+import { prisma } from "./src/db.config.js";
 
-import { handleUserSignUp }           from "./src/controllers/user.controller.js";
+import { handleUserSignUp, handleUpdateUserProfile } from "./src/controllers/user.controller.js";
+
 import { handleListMyReviews }        from "./src/controllers/review.controller.js";
 import { handleCreateStore }          from "./src/controllers/store.controller.js";
 import { handleListStoreMissions }    from "./src/controllers/mission.controller.js";
@@ -17,6 +23,24 @@ import { handleCreateMission,
 dotenv.config();
 const app = express();
 const port = process.env.PORT;
+passport.use(googleStrategy);
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((user, done) => done(null, user));
+passport.use(naverStrategy);
+
+// 인증 미들웨어 추가
+const authenticateToken = (req, res, next) => {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  
+  // 세션에 사용자 정보가 없는 경우 에러 처리
+  return res.status(401).error({
+    errorCode: "unauthorized",
+    reason: "로그인이 필요합니다.",
+    data: null
+  });
+};
 
 /**
  * 공통 응답을 사용할 수 있는 헬퍼 함수 등록
@@ -43,13 +67,58 @@ app.use(express.static('public')); //정적 파일 접근
 app.use(express.json()); //request의 본문을 json으로 해석할 수 있도록함(JSON 형태의 요청 body를 파싱하기 위함)
 app.use(express.urlencoded({extended: false})); //단순 객체 문자열 형태로 본문 데이터 해석
 
+app.use(
+  session({
+    cookie: {
+      maxAge: 7 * 24 * 60 * 60 * 1000, // ms
+    },
+    resave: false,
+    saveUninitialized: false,
+    secret: process.env.EXPRESS_SESSION_SECRET,
+    store: new PrismaSessionStore(prisma, {
+      checkPeriod: 2 * 60 * 1000, // ms
+      dbRecordIdIsSessionId: true,
+      dbRecordIdFunction: undefined,
+    }),
+  })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.get("/", (req, res) => {
+  // #swagger.ignore = true
+  res.send("Hello World!");
+});
+
+//구글 로그인 라우트
+app.get("/oauth2/login/google", passport.authenticate("google"));
+app.get(
+  "/oauth2/callback/google",
+  passport.authenticate("google", {
+    failureRedirect: "/oauth2/login/google",
+    failureMessage: true,
+  }),
+  (req, res) => res.redirect("/")
+);
+
+//네이버 로그인 라우트트
+app.get("/naverlogin", passport.authenticate("naver"));
+app.get(
+  "/callback",
+  passport.authenticate("naver", {
+    failureRedirect: "/naverlogin",
+    failureMessage: true,
+  }),
+  (req, res) => res.redirect("/")
+);
 
 // ─────────── User ───────────
 app.post("/users/signup",                 handleUserSignUp);
 app.get ("/users/:userId/reviews",        handleListMyReviews);
 app.get ("/users/:userId/missions",       handleListUserMissions);
-app.patch("/users/:userId/missions/:missionId",
-                                       handleCompleteMission);
+app.patch("/users/:userId/missions/:missionId", handleCompleteMission);
+app.patch("/users/profile",               authenticateToken, handleUpdateUserProfile); // 새로 추가된 회원정보 수정 API
 
 // ─────────── Store ──────────
 app.post("/stores",                       handleCreateStore);
@@ -121,3 +190,4 @@ app.listen(port, () => {
   console.log(`${port}번 포트에서 서버 실행 중`);
 }
 );
+
